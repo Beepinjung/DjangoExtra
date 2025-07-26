@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 50px auto; padding: 20px;">
+    <h2 style="text-align: center;">Your Tasks</h2>
+
+    {% if tasks %}
+        <ul style="list-style: none; padding: 0;">
+            {% for task in tasks %}
+                <li style="padding: 10px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center;">
+                    <span>
+                        {{ task.title }}{% if task.completed %} ✅{% endif %}
+                    </span>
+                    <span>
+                        <a href="{% url 'task-edit' task.pk %}">Edit</a> |
+                        <a href="{% url 'task-delete' task.pk %}">Delete</a>
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p style="text-align: center;">No tasks found.</p>
+    {% endif %}
+
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{% url 'task-create' %}" class="btn btn-primary">Create Task</a>
+    </div>
+</div>
+{% endblock %}
