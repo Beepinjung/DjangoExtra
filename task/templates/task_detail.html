@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ task.title }}</h1>
+<p>{{ task.description }}</p>
+{% if task.is_secret %}
+<p><em>This is a secret task.</em></p>
+{% endif %}
+<a href="{% url 'task-list' %}">Back to tasks</a>
+{% endblock %}

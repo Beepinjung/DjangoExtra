@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white shadow rounded-lg mt-10 p-8">
+    <div class="flex flex-col items-center text-center">
+        {% if profile.profile_picture %}
+            <img src="{{ profile.profile_picture.url }}" alt="Profile Picture"
+                 class="w-32 h-32 rounded-full object-cover shadow mb-4 border">
+        {% else %}
+            <div class="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-white text-3xl mb-4">
+                {{ user.username|slice:":1"|upper }}
+            </div>
+        {% endif %}
+
+        <h2 class="text-2xl font-semibold">{{ profile.name }}</h2>
+        <p class="text-gray-500">@{{ user.username }}</p>
+
+        <div class="mt-6 w-full text-left">
+            <div class="mb-4">
+                <h3 class="font-semibold text-gray-700">Email</h3>
+                <p class="text-gray-800">{{ user.email }}</p>
+            </div>
+            {% if profile.phone %}
+            <div class="mb-4">
+                <h3 class="font-semibold text-gray-700">Phone</h3>
+                <p class="text-gray-800">{{ profile.phone }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-6">
+            <a href="{% url 'profile_edit' %}" class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 transition">
+                Edit Profile
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
