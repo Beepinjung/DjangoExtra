@@ -25,8 +25,12 @@ urlpatterns = [
     path('tasks/<int:pk>/', views.task_detail, name='task-detail'),
     path('tasks/<int:pk>/edit/', views.task_edit, name='task-edit'),
     path('tasks/<int:pk>/delete/', views.task_delete, name='task-delete'),
+    path('task/<int:pk>/toggle/', views.toggle_task_completion, name='toggle_task'),
 
     # Secret task URLs (password-protected)
     path('secret-task/<int:pk>/', views.secret_task_detail, name='secret-task-detail'),
+    path('secret-task/<int:pk>/password/', views.secret_task_password_prompt, name='secret-task-password-prompt'),
     path('secret-task/<int:pk>/edit/', views.secret_task_edit, name='secret-task-edit'),
+    path('secret-task/<int:pk>/delete/', views.secret_task_delete, name='secret-task-delete'),
+
 ]

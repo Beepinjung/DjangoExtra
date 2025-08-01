@@ -13,7 +13,7 @@ class RegisterForm(UserCreationForm):
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ['title', 'description', 'completed', 'is_secret', 'secret_password']
+        fields = ['title', 'description','is_secret', 'secret_password']
         widgets = {
             'secret_password': forms.PasswordInput(render_value=True),
         }

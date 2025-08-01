@@ -6,5 +6,15 @@
 {% if task.is_secret %}
 <p><em>This is a secret task.</em></p>
 {% endif %}
+
+<form method="post" action="" style="margin-bottom: 1em;">
+  {% csrf_token %}
+  <button type="submit" name="delete" 
+          class="text-sm text-red-600 hover:underline"
+          onclick="return confirm('Are you sure you want to delete this secret task?');">
+    Delete
+  </button>
+</form>
+
 <a href="{% url 'task-list' %}">Back to tasks</a>
 {% endblock %}

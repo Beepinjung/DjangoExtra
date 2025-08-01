@@ -1,55 +1,93 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-lg shadow-lg border border-gray-200">
-  <h2 class="text-3xl font-extrabold text-center text-blue-700 mb-8 tracking-wide">Your Tasks</h2>
+<div class="max-w-2xl mx-auto mt-10 space-y-12">
 
-  {% if tasks %}
-    <ul class="divide-y divide-gray-300">
-      {% for task in tasks %}
-        <li class="py-4 flex justify-between items-center hover:bg-blue-50 transition rounded-md px-3">
-          <div class="max-w-[70%]">
-            <h3 class="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-              {% if task.is_secret %}
-                <a href="{% url 'secret-task-detail' task.pk %}" class="hover:underline text-red-600 flex items-center space-x-1">
-                  <span>{{ task.title }}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" title="Secret Task">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.104-.896-2-2-2s-2 .896-2 2m4 0v1a4 4 0 11-8 0v-1a4 4 0 018 0z" />
-                  </svg>
-                </a>
-              {% else %}
-                <a href="{% url 'task-detail' task.pk %}" class="hover:underline text-gray-900">{{ task.title }}</a>
+  <section class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+    <h2 class="text-3xl font-extrabold text-center text-yellow-700 mb-8 tracking-wide">Incomplete Tasks</h2>
+
+    {% if incomplete_tasks %}
+      <ul class="divide-y divide-gray-300">
+        {% for task in incomplete_tasks %}
+          <li class="py-4 flex justify-between items-center hover:bg-yellow-50 transition rounded-md px-3">
+            <div class="max-w-[70%]">
+              {% if task.description %}
+                <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ task.description }}</p>
               {% endif %}
-            </h3>
-            {% if task.description %}
-              <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ task.description }}</p>
-            {% endif %}
-            <p class="text-xs text-gray-400 mt-1">
-              Created: {{ task.created_at|date:"M d, Y" }} | Updated: {{ task.updated_at|date:"M d, Y" }}
-            </p>
-          </div>
-          <div class="flex items-center space-x-4">
-            {% if task.completed %}
-              <span class="text-green-600 text-xl select-none" title="Completed">✔️</span>
-            {% else %}
-              <span class="text-yellow-500 text-xl select-none" title="Pending">⌛</span>
-            {% endif %}
+              <p class="text-xs text-gray-400 mt-1">
+                Created: {{ task.created_at|date:"M d, Y" }} | Updated: {{ task.updated_at|date:"M d, Y" }}
+              </p>
+            </div>
 
-            {% if not task.is_secret %}
-              <a href="{% url 'task-edit' task.pk %}" class="text-sm text-blue-600 hover:underline">Edit</a>
-              <a href="{% url 'task-delete' task.pk %}" class="text-sm text-red-600 hover:underline">Delete</a>
-            {% else %}
-              <!-- You can show disabled or no edit/delete links for secret tasks -->
-              <span class="text-sm text-gray-400 cursor-not-allowed select-none">Edit</span>
-              <span class="text-sm text-gray-400 cursor-not-allowed select-none">Delete</span>
-            {% endif %}
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-center text-gray-400 italic">No tasks found. Time to create some!</p>
-  {% endif %}
+            <div class="flex items-center space-x-4">
+              <span class="text-yellow-500 text-xl select-none" title="Pending">⌛</span>
+
+              {% if not task.is_secret %}
+                <form method="post" action="{% url 'toggle_task' task.pk %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="text-sm text-green-600 hover:underline">Mark Complete</button>
+                </form>
+                <a href="{% url 'task-edit' task.pk %}" class="text-sm text-blue-600 hover:underline">Edit</a>
+                <a href="{% url 'task-delete' task.pk %}" class="text-sm text-red-600 hover:underline">Delete</a>
+              {% else %}
+                <a href="{% url 'secret-task-password-prompt' task.pk %}" class="text-sm text-blue-600 hover:underline">
+                  Edit (Requires Password)
+                </a>
+                <a href="{% url 'secret-task-delete' task.pk %}" class="text-sm text-red-600 hover:underline">
+                  Delete (Requires Password)
+                </a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-center text-gray-500 mt-6">No incomplete tasks.</p>
+    {% endif %}
+  </section>
+
+  <section class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+    <h2 class="text-3xl font-extrabold text-center text-green-700 mb-8 tracking-wide">Completed Tasks</h2>
+
+    {% if completed_tasks %}
+      <ul class="divide-y divide-gray-300">
+        {% for task in completed_tasks %}
+          <li class="py-4 flex justify-between items-center hover:bg-green-50 transition rounded-md px-3">
+            <div class="max-w-[70%]">
+              {% if task.description %}
+                <p class="text-gray-600 text-sm mt-1 line-clamp-2 line-through">{{ task.description }}</p>
+              {% endif %}
+              <p class="text-xs text-gray-400 mt-1 line-through">
+                Created: {{ task.created_at|date:"M d, Y" }} | Updated: {{ task.updated_at|date:"M d, Y" }}
+              </p>
+            </div>
+
+            <div class="flex items-center space-x-4">
+              <span class="text-green-600 text-xl select-none" title="Completed">✔️</span>
+
+              {% if not task.is_secret %}
+                <form method="post" action="{% url 'toggle_task' task.pk %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="text-sm text-yellow-600 hover:underline">Undo</button>
+                </form>
+                <a href="{% url 'task-edit' task.pk %}" class="text-sm text-blue-600 hover:underline">Edit</a>
+                <a href="{% url 'task-delete' task.pk %}" class="text-sm text-red-600 hover:underline">Delete</a>
+              {% else %}
+                <a href="{% url 'secret-task-password-prompt' task.pk %}" class="text-sm text-blue-600 hover:underline">
+                  Edit (Requires Password)
+                </a>
+                <a href="{% url 'secret-task-delete' task.pk %}" class="text-sm text-red-600 hover:underline">
+                  Delete (Requires Password)
+                </a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-center text-gray-500 mt-6">No completed tasks yet.</p>
+    {% endif %}
+  </section>
 
   <div class="text-center mt-10">
     <a href="{% url 'task-create' %}" 
@@ -57,5 +95,6 @@
       + Create New Task
     </a>
   </div>
+
 </div>
 {% endblock %}

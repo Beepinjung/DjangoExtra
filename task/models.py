@@ -6,6 +6,7 @@ from django.utils import timezone
 class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
+    completed = models.BooleanField(default=False)
     description = models.TextField(blank=True)
     due_date = models.DateField(null=True, blank=True)
     priority = models.CharField(
