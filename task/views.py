@@ -6,6 +6,12 @@ from django.contrib import messages
 from .models import Task, Profile
 from .forms import TaskForm, RegisterForm, ProfileForm
 from django import forms
+from django.db.models import Q  # Add this import
+from datetime import datetime
+
+
+
+
 
 def register(request):
     if request.method == 'POST':
@@ -20,14 +26,63 @@ def register(request):
 
 @login_required
 def task_list(request):
+    # Get all search parameters
+    search_query = request.GET.get('q', '')
+    status = request.GET.get('status', '')
+    priority = request.GET.get('priority', '')
+    tag = request.GET.get('tag', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    # Base queryset
     tasks = Task.objects.filter(user=request.user)
-    completed_tasks = tasks.filter(completed=True).order_by('-created_at')
+
+    # Apply search filters
+    if search_query:
+        tasks = tasks.filter(
+            Q(title__icontains=search_query) | 
+            Q(description__icontains=search_query))
+
+    if status == 'completed':
+        tasks = tasks.filter(completed=True)
+    elif status == 'incomplete':
+        tasks = tasks.filter(completed=False)
+    
+    if priority:
+        tasks = tasks.filter(priority=priority)
+    
+    if tag:
+        tasks = tasks.filter(tags__icontains=tag)
+    
+    if date_from:
+        try:
+            date_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            tasks = tasks.filter(created_at__date__gte=date_obj)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            date_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            tasks = tasks.filter(created_at__date__lte=date_obj)
+        except ValueError:
+            pass
+
+    # Categorize tasks (maintaining your existing structure)
     incomplete_tasks = tasks.filter(completed=False).order_by('-created_at')
+    secured_tasks = incomplete_tasks.filter(is_secret=True)
+    normal_incomplete_tasks = incomplete_tasks.filter(is_secret=False)
+    completed_tasks = tasks.filter(completed=True).order_by('-created_at')
+
     unlocked = request.session.get('unlocked_tasks', [])
+
     return render(request, 'tasklist.html', {
         'completed_tasks': completed_tasks,
-        'incomplete_tasks': incomplete_tasks,
+        'normal_incomplete_tasks': normal_incomplete_tasks,
+        'secured_incomplete_tasks': secured_tasks,
         'unlocked': unlocked,
+        'search_params': request.GET,  # Pass all search parameters back to template
+        'priority_choices': Task.PRIORITY_CHOICES,  # For priority filter dropdown
     })
 
 @login_required
@@ -42,11 +97,19 @@ def task_create(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
+            task.completed = False  # Explicitly set as incomplete
+            
+            # Handle secret tasks
+            if task.is_secret and not task.secret_password:
+                messages.error(request, 'Secret tasks require a password.')
+                return render(request, 'taskform.html', {'form': form})
+            
             task.save()
             messages.success(request, 'Task created successfully.')
             return redirect('task-list')
     else:
-        form = TaskForm()
+        form = TaskForm(initial={'completed': False})  # Set default
+        
     return render(request, 'taskform.html', {'form': form})
 
 @login_required
@@ -138,17 +201,14 @@ def secret_task_detail(request, pk):
 
     unlocked = request.session.get('unlocked_tasks', [])
 
-    # Handle delete request from the detail page
     if request.method == 'POST' and 'delete' in request.POST:
         task.delete()
         messages.success(request, 'Secret task deleted successfully.')
         return redirect('task-list')
 
-    # Show task detail if unlocked
     if pk in unlocked:
         return render(request, 'secret_task_detail.html', {'task': task})
 
-    # Otherwise, show password prompt and handle unlock
     if request.method == 'POST':
         form = SecretPasswordForm(request.POST)
         if form.is_valid():
@@ -218,16 +278,11 @@ def secret_task_delete(request, pk):
     task = get_object_or_404(Task, pk=pk, user=request.user, is_secret=True)
     unlocked = request.session.get('unlocked_tasks', [])
 
-    # If task is unlocked, allow delete without password prompt (optional)
-    # Or you can always require password for delete (safer)
-    # For safety, let's always require password for delete.
-
     if request.method == 'POST':
         password = request.POST.get('password')
         if password == task.secret_password:
             task.delete()
             messages.success(request, 'Secret task deleted successfully.')
-            # Remove from unlocked if present
             if pk in unlocked:
                 unlocked.remove(pk)
                 request.session['unlocked_tasks'] = unlocked
@@ -236,3 +291,41 @@ def secret_task_delete(request, pk):
             messages.error(request, 'Incorrect password. Please try again.')
 
     return render(request, 'secret_task_delete.html', {'task': task})
+
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = ['title', 'description', 'is_secret', 'secret_password']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50',
+                'rows': 4,
+            }),
+            'is_secret': forms.CheckboxInput(attrs={
+                'class': 'h-5 w-5 text-blue-600'
+            }),
+            'secret_password': forms.PasswordInput(attrs={
+                'class': 'w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50'
+            }),
+        }
+
+
+def task_complete_view(request, pk):
+    # ... your code to mark complete
+    messages.success(request, "Task marked as completed! 🎉")
+    return render('task-list')
+
+def task_edit_view(request, pk):
+    # ... after successful edit
+    messages.info(request, "Task updated successfully.")
+    return render('task-list')
+
+def task_password_error(request):
+    messages.error(request, "Password incorrect. Try again!")
+    return render('task-list')
+
+
+

@@ -1,53 +1,239 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-xl mx-auto mt-10 bg-white p-8 rounded-lg shadow-md">
-  <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">
-    {% if form.instance.pk %}Edit{% else %}Create{% endif %} Task
-  </h2>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Task Manager Pro</h1>
+      <p class="text-xl text-blue-600 font-medium">
+        {% if form.instance.pk %}Edit Your Task{% else %}Create New Masterpiece{% endif %}
+      </p>
+    </div>
 
-  <form method="post" class="space-y-4">
-    {% csrf_token %}
-    {% for field in form %}
-      <div id="field-{{ field.name }}" {% if field.name == "secret_password" and not form.initial.is_secret %}style="display:none;"{% endif %}>
-        <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}
-          <p class="text-red-500 text-sm mt-1">{{ field.errors.0 }}</p>
-        {% endif %}
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-3xl">
+      <!-- Form Header -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6">
+        <h2 class="text-2xl font-bold text-white">
+          {% if form.instance.pk %}Refine Your Task{% else %}Craft New Task{% endif %}
+        </h2>
+        <p class="text-blue-100 mt-1">Every great achievement starts with a well-defined task</p>
       </div>
-    {% endfor %}
 
-    <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md font-medium">
-      Save Task
-    </button>
-  </form>
+      <!-- Form Body -->
+      <div class="p-8">
+        <form method="post" class="space-y-8">
+          {% csrf_token %}
 
-  <div class="text-center mt-6">
-    <a href="{% url 'task-list' %}" class="text-sm text-blue-500 hover:underline">← Back to Task List</a>
+          <!-- Title Field -->
+          <div class="space-y-2">
+            <label for="{{ form.title.id_for_label }}" class="block text-lg font-medium text-gray-800">
+              Task Title <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              {{ form.title }}
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+            </div>
+            {% if form.title.errors %}
+            <p class="text-sm text-red-600 flex items-center">
+              <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              {{ form.title.errors.0 }}
+            </p>
+            {% endif %}
+          </div>
+
+          <!-- Description Field -->
+          <div class="space-y-2">
+            <label for="{{ form.description.id_for_label }}" class="block text-lg font-medium text-gray-800">
+              Detailed Description
+            </label>
+            {{ form.description }}
+            <p class="text-sm text-gray-500">What exactly needs to be done? Be specific!</p>
+          </div>
+
+          <!-- Secret Task Toggle -->
+          <div class="space-y-2">
+            <label class="flex items-center space-x-3">
+              {{ form.is_secret }}
+              <span class="text-lg font-medium text-gray-800">Make this a secret task</span>
+            </label>
+            <p class="text-sm text-gray-500">Only visible to you and those with the password</p>
+          </div>
+
+          <!-- Secret Password Field (Conditional) -->
+          <div id="secret-password-field" class="{% if not form.initial.is_secret %}hidden{% endif %} space-y-2 transition-all duration-200">
+            <label for="{{ form.secret_password.id_for_label }}" class="block text-lg font-medium text-gray-800">
+              Secret Password
+            </label>
+            <div class="relative">
+              {{ form.secret_password }}
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+            </div>
+            {% if form.secret_password.errors %}
+            <p class="text-sm text-red-600 flex items-center">
+              <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              {{ form.secret_password.errors.0 }}
+            </p>
+            {% endif %}
+          </div>
+
+          <!-- Form Actions -->
+          <div class="flex flex-col-reverse sm:flex-row sm:justify-between gap-4 pt-6">
+            <a href="{% url 'task-list' %}" class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+              </svg>
+              Back to Dashboard
+            </a>
+            <button type="submit" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-[1.02]">
+              <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              {% if form.instance.pk %}Update Masterpiece{% else %}Create Masterpiece{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-12 text-center text-gray-500 text-sm">
+      <p>© 2025 Task Manager Pro. All rights reserved.</p>
+      <p class="mt-1">Crafted with care for productive minds</p>
+    </div>
   </div>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Toggle secret password field
     const secretCheckbox = document.querySelector('input[name="is_secret"]');
-    const passwordFieldDiv = document.getElementById('field-secret_password');
+    const passwordField = document.getElementById('secret-password-field');
 
     function togglePasswordField() {
       if (secretCheckbox.checked) {
-        passwordFieldDiv.style.display = 'block';
+        passwordField.classList.remove('hidden');
+        passwordField.querySelector('input').focus();
       } else {
-        passwordFieldDiv.style.display = 'none';
-        // Optionally clear password input when hidden
-        const pwdInput = passwordFieldDiv.querySelector('input');
-        if (pwdInput) pwdInput.value = '';
+        passwordField.classList.add('hidden');
+        passwordField.querySelector('input').value = '';
       }
     }
 
-    if(secretCheckbox) {
+    if (secretCheckbox) {
       secretCheckbox.addEventListener('change', togglePasswordField);
-      togglePasswordField();  // Run on page load to set initial visibility
+      togglePasswordField();
     }
+
+    // Add floating label effect
+    document.querySelectorAll('input[type="text"], input[type="password"], textarea').forEach(input => {
+      const label = input.closest('.space-y-2').querySelector('label');
+      
+      function checkValue() {
+        if (input.value) {
+          label.classList.add('text-blue-600', 'scale-90', '-translate-y-1', 'origin-top-left');
+        } else {
+          label.classList.remove('text-blue-600', 'scale-90', '-translate-y-1', 'origin-top-left');
+        }
+      }
+      
+      input.addEventListener('focus', () => {
+        label.classList.add('text-blue-600');
+      });
+      
+      input.addEventListener('blur', () => {
+        label.classList.remove('text-blue-600');
+        checkValue();
+      });
+      
+      checkValue();
+    });
   });
 </script>
+
+<style>
+  /* Input field styling */
+  input[type="text"],
+  input[type="password"],
+  textarea,
+  select {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #1a202c;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  input[type="text"]:focus,
+  input[type="password"]:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+
+  /* Checkbox styling */
+  input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.25rem;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+  }
+
+  input[type="checkbox"]:checked {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+  }
+
+  input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 0.4375rem;
+    top: 0.125rem;
+    width: 0.375rem;
+    height: 0.75rem;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  /* Textarea specific */
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  /* Label transitions */
+  label {
+    display: inline-block;
+    transition: all 0.2s ease-in-out;
+    transform-origin: left center;
+  }
+</style>
 {% endblock %}
